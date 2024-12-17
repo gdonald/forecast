@@ -1,0 +1,16 @@
+<h2>Latest Forecast</h2>
+
+<% if forecast["error"] %>
+  <p><%= forecast["error"] %></p>
+<% else %>
+  <p><b>Currently:</b> <%= forecast["description"] %></p>
+  <p><b>Current Temperature:</b> <%= forecast["current_temp"] %>°F</p>
+  <p><b>Feels Like:</b> <%= forecast["feels_like"] %>°F</p>
+  <p><b>High / Low:</b> <%= forecast["temp_max"] %>°F / <%= forecast["temp_min"] %>°F</p>
+  <p><b>Humidity:</b> <%= forecast["humidity"] %>%</p>
+  <p><b>Wind Direction / Speed:</b> <%= forecast["wind_direction"] %> at <%= forecast["wind_speed"] %>mph</p>
+
+  <% if forecast['created_at'] %>
+    <p><b>* Cached At:</b> <%= forecast["created_at"] %></p>
+  <% end %>
+<% end %>
