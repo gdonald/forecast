@@ -22,3 +22,9 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+
+
+
+6d704672cbc66bddc21b76dc22faef28
+
+https://api.openweathermap.org/data/2.5/weather?zip=37043&appid=6d704672cbc66bddc21b76dc22faef28

@@ -8,3 +8,22 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+body {
+  margin-left: 30px;
+}
+
+body,
+input {
+  font-family: Arial, sans-serif;
+  font-size: 1.5rem;
+}
+
+h1,
+h2 {
+  color: blue;
+}
+
+h2 {
+  margin-top: 32px;
+}

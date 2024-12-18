@@ -1,0 +1,12 @@
+<%= form_for :address, url: update_path do %>
+
+<p>
+  <label for="address_zip"><b>Zip:</b></label>
+  <%= text_field :address, :zip, pattern: "[0-9]{5}", title: "Five digit zip code", required: true %>
+</p>
+
+<p>
+  <%= submit_tag "Get Forecast" %>
+</p>
+
+<% end %>
