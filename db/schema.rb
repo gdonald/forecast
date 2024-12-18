@@ -12,7 +12,7 @@
 
 ActiveRecord::Schema[8.0].define(version: 2024_12_17_225230) do
   create_table "weather_forecasts", force: :cascade do |t|
-    t.string "zip"
+    t.string "zip", null: false
     t.text "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

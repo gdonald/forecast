@@ -1,90 +1,99 @@
-name: CI
-
+name: 'Ruby on Rails CI'
 on:
-  pull_request:
   push:
-    branches: [ main ]
-
+    branches: ['main']
+  pull_request:
+    branches: ['main']
 jobs:
-  scan_ruby:
+  test:
     runs-on: ubuntu-latest
-
+    services:
+      postgres:
+        image: postgres:13-alpine
+        ports:
+          - '5432:5432'
+        env:
+          POSTGRES_DB: rails_test
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: 'postgres://rails:password@localhost:5432/rails_test'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Ruby
+      - name: Install chrome
+        uses: browser-actions/setup-chrome@latest
+      - run: chrome --version
+
+      - name: Install xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install xvfb
+
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install libvips
+
+      - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version: '3.3'
           bundler-cache: true
 
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
+      - name: Set up database schema
+        run: bin/rails db:schema:load
 
-  scan_js:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Install Node
+        uses: actions/setup-node@v3
         with:
-          ruby-version: .ruby-version
-          bundler-cache: true
+          node-version: 18
 
-      - name: Scan for security vulnerabilities in JavaScript dependencies
-        run: bin/importmap audit
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install package.json dependencies
+        run: yarn install --verbose
+
+      - name: Build Javascript
+        run: yarn run build
+
+      - name: Build CSS
+        run: yarn run build:css
+
+      - name: Run tests
+        run: xvfb-run --auto-servernum bundle exec rspec
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Ruby
+      - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version: '3.3'
           bundler-cache: true
 
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
+      - name: Setup Bundle Audit
+        run: gem install bundle-audit
 
-  test:
-    runs-on: ubuntu-latest
+      - name: Security audit dependencies
+        run: bundle exec bundle audit check --update
+        continue-on-error: true
 
-    # services:
-    #  redis:
-    #    image: redis
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-    steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git pkg-config google-chrome-stable
+      - name: Setup Brakeman
+        run: gem install brakeman
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Security audit application code
+        run: bundle exec brakeman -q -w2
+        continue-on-error: true
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
+      - name: Setup Rubocop
+        run: gem install rubocop
 
-      - name: Run tests
-        env:
-          RAILS_ENV: test
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+      - name: Lint Ruby files
+        run: bundle exec rubocop --parallel

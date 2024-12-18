@@ -8,7 +8,7 @@ class WeatherService
   end
 
   def get_forecast(zip)
-    forecast = WeatherForecast.for_zip(zip)&.first
+    forecast = WeatherForecast.for_zip(zip).first
     return JSON.parse(forecast.data).merge("created_at" => forecast.created_at.to_fs) if forecast
 
     url = "https://api.openweathermap.org/data/2.5/weather?zip=#{zip}&units=imperial&appid=#{api_key}"

@@ -1,7 +1,7 @@
 class CreateWeatherForecasts < ActiveRecord::Migration[8.0]
   def change
     create_table :weather_forecasts do |t|
-      t.string :zip
+      t.string :zip, null: false
       t.text :data
       t.timestamps
     end
